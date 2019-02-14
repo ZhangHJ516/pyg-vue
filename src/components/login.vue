@@ -30,20 +30,18 @@ export default {
     },
     methods: {
         //登录请求
-        handleLogin(){
+      async handleLogin() {
             console.log(1);
-            this.$http
-                .post(`login`,this.formdata)
-                .then((res)=>{
-                    console.log(2)
-                    console.log(res)
-                    const {
+        const res = await this.$http.post(`login`,this.formdata)
+        console.log(res);
+             const {
                         data: {
-                            data,
+                            data:{token},
                             meta: { msg, status }
                         }
                     } = res;
-                    if (status === 200) {
+                 if (status === 200) {
+                     localStorage.setItem('token',token);
                         // console.log("sucss----");
                         this.$router.push({
                             name:'home'
@@ -52,10 +50,29 @@ export default {
                          this.$message.error(msg);
                          console.log("err")
                     }
-                })
-                .catch(err => {
-                    console.log(err);
-                })
+
+                // .then((res)=>{
+                //     console.log(2)
+                //     console.log(res)
+                //     const {
+                //         data: {
+                //             data,
+                //             meta: { msg, status }
+                //         }
+                //     } = res;
+                //     if (status === 200) {
+                //         // console.log("sucss----");
+                //         this.$router.push({
+                //             name:'home'
+                //         })
+                //     } else {
+                //          this.$message.error(msg);
+                //          console.log("err")
+                //     }
+                // })
+                // .catch(err => {
+                //     console.log(err);
+                // })
         }
     },
 }
