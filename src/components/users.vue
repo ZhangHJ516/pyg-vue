@@ -39,7 +39,12 @@
         <template slot-scope="scope">{{scope.row.create_time | fmtdate}}</template>
       </el-table-column>
 
-      <el-table-column prop="name" label="用户状态" width="140"></el-table-column>
+      <el-table-column label="用户状态" width="140">
+        <template slot-scope="scope">
+        <el-switch v-model="scope.row.mg_state"
+         active-color="#13ce66" inactive-color="#ff4949"></el-switch>
+        </template>
+      </el-table-column>
       <el-table-column prop="name" label="操作" width="200">
         <template slot-scope="scope">
           <el-button type="primary" icon="el-icon-edit" circle size="mini" plain></el-button>
@@ -49,6 +54,16 @@
       </el-table-column>
     </el-table>
     <!-- 分页 -->
+    <el-pagination
+      class="page"
+      @size-change="handleSizeChange"
+      @current-change="handleCurrentChange"
+      :current-page="  pagenum"
+      :page-sizes="[2, 4, 6, 8]"
+      :page-size="2"
+      layout="total, sizes, prev, pager, next, jumper"
+      :total="total"
+    ></el-pagination>
   </el-card>
 </template>
 
@@ -58,7 +73,8 @@ export default {
     return {
       query: "",
       pagenum: 1,
-      pagesize: 10,
+      pagesize: 2,
+      total: -1,
       //表格数据
       list: []
     };
@@ -71,6 +87,19 @@ export default {
     this.getTableData();
   },
   methods: {
+
+    //分页相关的方法
+    handleSizeChange(val) {
+      console.log(`每页 ${val} 条`);
+       this.pagenum = 1;
+       this.pagesize =val;
+       this.getTableData();
+    
+    },
+   
+    handleCurrentChange(val) {
+      console.log(`当前页: ${val}`);
+    },
     //获取表格数据
     async getTableData() {
       //除了登录之外的接口 都要授权
@@ -88,6 +117,7 @@ export default {
         meta: { msg, status }
       } = res.data;
       if (status === 200) {
+        this.total = data.total;
         this.list = data.users;
         console.log(this.list);
       }
@@ -105,5 +135,8 @@ export default {
 }
 .searchInput {
   width: 350px;
+}
+.page {
+  margin-top: 20px;
 }
 </style>
