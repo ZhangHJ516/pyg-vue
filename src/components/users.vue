@@ -9,8 +9,11 @@
     <!-- 搜索+添加 -->
     <el-row class="seartBox">
       <el-col>
-        <el-input class="searchInput" placeholder="请输入内容" v-model="query">
-          <el-button slot="append" icon="el-icon-search"></el-button>
+        <el-input 
+        @clear = "getAllUsers()"
+        clearable class="searchInput" placeholder="请输入内容" v-model="query">
+          <el-button slot="append" icon="el-icon-search"  @click="searchUser()">
+          </el-button>
         </el-input>
         <!-- 添加按钮 -->
         <el-button type="success">成功按钮</el-button>
@@ -87,7 +90,16 @@ export default {
     this.getTableData();
   },
   methods: {
-
+      //清空时获取所有用户
+      getAllUsers() {
+         
+          this.getTableData();
+      },
+      //搜索用户
+      searchUser(){
+          this.pagenum = 1;
+          this.getTableData();
+      },
     //分页相关的方法
     handleSizeChange(val) {
       console.log(`每页 ${val} 条`);
@@ -99,6 +111,9 @@ export default {
    
     handleCurrentChange(val) {
       console.log(`当前页: ${val}`);
+       this.pagenum = val;
+       this.getTableData();
+   
     },
     //获取表格数据
     async getTableData() {
