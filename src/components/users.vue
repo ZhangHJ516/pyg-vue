@@ -95,7 +95,7 @@
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="dialogFormVisibleAdd = false">取 消</el-button>
-        <el-button type="primary" @click="dialogFormVisibleAdd = false">确 定</el-button>
+        <el-button type="primary" @click="addUser()">确 定</el-button>
       </div>
     </el-dialog> 
   </el-card>
@@ -130,9 +130,27 @@ export default {
     this.getTableData();
   },
   methods: {
+    //添加-发送请求
+    async addUser(){
+        //发送请求 获取表单数据
+    const res = await this.$http.post(`users`,this.formdata);
+        //关闭对话框
+    console.log(res);
+    const {meta:{msg,status}} = res.data;
+    if(status ===201) {
+        //关闭对话框
+    this.dialogFormVisibleAdd = false;
+        //更新表格
+        this.getTableData();
+    }
+  
+    },
     //添加用户中的打开对话框 【点击按钮-改bool】
     showDiaAddUser(){
         this.dialogFormVisibleAdd = true;
+        //清空
+        this.formdata = {};
+
     },
     //清空时获取所有用户
     getAllUsers() {
@@ -167,7 +185,7 @@ export default {
           this.pagesize
         }`
       );
-      //console.log(res); //没有数据，此时看接口文档有没有其他数据
+      console.log(res); //没有数据，此时看接口文档有没有其他数据
       const {
         data,
         meta: { msg, status }
