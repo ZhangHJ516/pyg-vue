@@ -19,9 +19,7 @@
           <el-button slot="append" icon="el-icon-search" @click="searchUser()"></el-button>
         </el-input>
         <!-- 添加按钮 -->
-        <el-button type="success"
-        @click="showDiaAddUser()"
-        >添加按钮</el-button>
+        <el-button type="success" @click="showDiaAddUser()">添加按钮</el-button>
       </el-col>
     </el-row>
 
@@ -54,8 +52,22 @@
       </el-table-column>
       <el-table-column prop="name" label="操作" width="200">
         <template slot-scope="scope">
-          <el-button type="primary" icon="el-icon-edit" circle size="mini" plain></el-button>
-          <el-button type="danger" icon="el-icon-delete" circle size="mini" plain></el-button>
+          <el-button
+            @click="showDiaEditUser(scope.row)"
+            type="primary"
+            icon="el-icon-edit"
+            circle
+            size="mini"
+            plain
+          ></el-button>
+          <el-button
+            @click="showMsgBoxDele(scope.row)"
+            type="danger"
+            icon="el-icon-delete"
+            circle
+            size="mini"
+            plain
+          ></el-button>
           <el-button type="success" icon="el-icon-check" circle size="mini" plain></el-button>
         </template>
       </el-table-column>
@@ -73,8 +85,8 @@
     ></el-pagination>
 
     <!-- 添加用户的对话框 -->
-   <el-dialog title="添加用户" :visible.sync="dialogFormVisibleAdd">
-        <!-- 表单 -->
+    <el-dialog title="添加用户" :visible.sync="dialogFormVisibleAdd">
+      <!-- 表单 -->
       <el-form label-position="left" label-width="80px" :model="formdata">
         <el-form-item label="用户名">
           <el-input v-model="formdata.username"></el-input>
@@ -85,19 +97,30 @@
         <el-form-item label="邮箱">
           <el-input v-model="formdata.email"></el-input>
         </el-form-item>
-         <el-form-item label="电话">
+        <el-form-item label="电话">
           <el-input v-model="formdata.mobile"></el-input>
         </el-form-item>
-         <el-form-item label="活动形式">
-          <el-input v-model="formdata.type"></el-input>
-        </el-form-item>
+      </el-form>
+    </el-dialog>
 
+    <!-- 对话框 - 编辑 -->
+    <el-dialog title="编辑用户" :visible.sync="dialogFormVisibleEdit">
+      <el-form label-position="left" label-width="80px" :model="formdata">
+        <el-form-item label="用户名">
+          <el-input disabled v-model="formdata.username"></el-input>
+        </el-form-item>
+        <el-form-item label="邮箱">
+          <el-input v-model="formdata.email"></el-input>
+        </el-form-item>
+        <el-form-item label="电话">
+          <el-input v-model="formdata.mobile"></el-input>
+        </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
-        <el-button @click="dialogFormVisibleAdd = false">取 消</el-button>
-        <el-button type="primary" @click="addUser()">确 定</el-button>
+        <el-button @click="dialogFormVisibleEdit = false">取 消</el-button>
+        <el-button type="primary" @click="editUser()">确 定</el-button>
       </div>
-    </el-dialog> 
+    </el-dialog>
   </el-card>
 </template>
 
@@ -112,13 +135,14 @@ export default {
       //表格数据
       list: [],
       //关闭对话框
-      dialogFormVisibleAdd:false,
+      dialogFormVisibleAdd: false,
+      dialogFormVisibleEdit: false,
       //表单数据-> 将来发送post请求->请求体
-      formdata:{
-          username:"",
-          password:"",
-          email:"",
-          mobile:""
+      formdata: {
+        username: "",
+        password: "",
+        email: "",
+        mobile: ""
       }
     };
   },
@@ -130,27 +154,83 @@ export default {
     this.getTableData();
   },
   methods: {
+    //编辑 - 发送请求
+  async editUser() {
+      const res = await this.$http.put(
+        `users/${this.formdata.id}`,
+        this.formdata);
+
+     const {
+            meta: { msg, status }
+          } = res.data;
+          if (status === 200) {
+          //关闭对话框
+          this.dialogFormVisibleEdit = false;
+          //更新表格
+            this.getTableData();
+          }
+      
+    },
+    //编辑 - 显示对话框
+    showDiaEditUser(user) {
+      //获取当前用户数据
+    this.formdata = user;
+
+      this.dialogFormVisibleEdit = true;
+    },
+    //删除 -显示确认框
+    //点击确定 来到.then 点击取消 来到 .catch
+    showMsgBoxDele(user) {
+      this.$confirm("是否把我删掉?", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning"
+      })
+        .then(async () => {
+          const res = await this.$http.delete(`users/${user.id}`);
+          const {
+            meta: { msg, status }
+          } = res.data;
+          if (status === 200) {
+            this.$message.success(msg);
+            this.pagenum = 1;
+            this.getTableData();
+          }
+          this.$message.success("删除成功");
+          // this.$message({
+          //   type: 'success',
+          //   message: '删除成功!'
+          // });
+        })
+        .catch(() => {
+          this.$message.info("取消删除");
+          // this.$message({
+          //   type: 'info',
+          //   message: '已取消删除'
+          // });
+        });
+    },
     //添加-发送请求
-    async addUser(){
-        //发送请求 获取表单数据
-    const res = await this.$http.post(`users`,this.formdata);
+    async addUser() {
+      //发送请求 获取表单数据
+      const res = await this.$http.post(`users`, this.formdata);
+      //关闭对话框
+      console.log(res);
+      const {
+        meta: { msg, status }
+      } = res.data;
+      if (status === 201) {
         //关闭对话框
-    console.log(res);
-    const {meta:{msg,status}} = res.data;
-    if(status ===201) {
-        //关闭对话框
-    this.dialogFormVisibleAdd = false;
+        this.dialogFormVisibleAdd = false;
         //更新表格
         this.getTableData();
-    }
-  
+      }
     },
     //添加用户中的打开对话框 【点击按钮-改bool】
-    showDiaAddUser(){
-        this.dialogFormVisibleAdd = true;
-        //清空
-        this.formdata = {};
-
+    showDiaAddUser() {
+      this.dialogFormVisibleAdd = true;
+      //清空
+      this.formdata = {};
     },
     //清空时获取所有用户
     getAllUsers() {
