@@ -47,7 +47,12 @@
 
       <el-table-column label="用户状态" width="140">
         <template slot-scope="scope">
-          <el-switch v-model="scope.row.mg_state" active-color="#13ce66" inactive-color="#ff4949"></el-switch>
+          <el-switch
+            @change="changeState(scop.row)"
+            v-model="scope.row.mg_state"
+            active-color="#13ce66"
+            inactive-color="#ff4949"
+          ></el-switch>
         </template>
       </el-table-column>
       <el-table-column prop="name" label="操作" width="200">
@@ -68,7 +73,14 @@
             size="mini"
             plain
           ></el-button>
-          <el-button type="success" icon="el-icon-check" circle size="mini" plain></el-button>
+          <el-button
+            @click="showDiaSetRole(scope.row)"
+            type="success"
+            icon="el-icon-check"
+            circle
+            size="mini"
+            plain
+          ></el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -121,6 +133,34 @@
         <el-button type="primary" @click="editUser()">确 定</el-button>
       </div>
     </el-dialog>
+
+    <!-- 对话框-分配角色 -->
+    <el-dialog title="分配角色" :visible.sync="dialogFormVisibleRole">
+      <el-form label-position="left" label-width="80px" :model="formdata">
+        <el-form-item label="用户名">{{formdata.username}}</el-form-item>
+        <el-form-item label="角色">
+          <!-- 下拉框的角色 -->
+          {{selectVal}}
+          <el-select v-model="selectVal" placeholder="请选择角色名">
+            <el-option disabled label="请选择" :value="-1"></el-option>
+            <!-- 5个角色此时都有了自己的value值
+             [30,31,34,39,40]
+            value就是角色id-->
+            <el-option
+              v-for="(item,i) in roles"
+              :key="item.id"
+              :label="item.roleName"
+              :value="item.id"
+            ></el-option>
+            <!-- （动态）将来获取角色名数据 v-for遍历 -->
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="dialogFormVisibleRole = false">取 消</el-button>
+        <el-button type="primary" @click="setRole()">确 定</el-button>
+      </div>
+    </el-dialog>
   </el-card>
 </template>
 
@@ -137,13 +177,19 @@ export default {
       //关闭对话框
       dialogFormVisibleAdd: false,
       dialogFormVisibleEdit: false,
+      dialogFormVisibleRole: false,
       //表单数据-> 将来发送post请求->请求体
       formdata: {
         username: "",
         password: "",
         email: "",
         mobile: ""
-      }
+      },
+      // 角色分配下拉框的数据
+      selectVal: 1,
+      currUserId: -1,
+      //角色数组
+      roles: []
     };
   },
   //mounted(){}
@@ -154,27 +200,65 @@ export default {
     this.getTableData();
   },
   methods: {
+    //分配角色 发送请求
+    async setRole() {
+      const res = await this.$http.put(`users/${this.currUserId}/role`, {
+        rid: this.selectVal
+      });
+      console.log(this.currUserId)
+        console.log(this.selectVal)
+      console.log(res);
+      
+      const {
+        meta: { msg, status }
+      } = res.data;
+      if (status === 200) {
+        //关闭对话框
+        this.dialogFormVisibleRole =false; 
+      }
+    },
+    //分配角色 - 打开对话框
+    async showDiaSetRole(user) {
+      // this.currUsername = user.username;
+      this.formdata = user;
+      this.currUserId = user.id;
+      this.dialogFormVisibleRole = true;
+
+      //获取角色名称
+      const res = await this.$http.get(`roles`);
+      this.roles = res.data.data;
+      //给下拉框V-model绑定的selectVal赋值
+      const res2 = await this.$http.get(`users/${user.id}`);
+      this.selectVal = res2.data.data.rid;
+    },
+    //修改状态(绿红)
+    async changeState(user) {
+      //uId是用户id type  - 用户user 所以要先拿到user
+      const res = await this.$http.put(
+        `users/${user.id}/state/${user.mg_state}`
+      );
+    },
     //编辑 - 发送请求
-  async editUser() {
+    async editUser() {
       const res = await this.$http.put(
         `users/${this.formdata.id}`,
-        this.formdata);
+        this.formdata
+      );
 
-     const {
-            meta: { msg, status }
-          } = res.data;
-          if (status === 200) {
-          //关闭对话框
-          this.dialogFormVisibleEdit = false;
-          //更新表格
-            this.getTableData();
-          }
-      
+      const {
+        meta: { msg, status }
+      } = res.data;
+      if (status === 200) {
+        //关闭对话框
+        this.dialogFormVisibleEdit = false;
+        //更新表格
+        this.getTableData();
+      }
     },
     //编辑 - 显示对话框
     showDiaEditUser(user) {
       //获取当前用户数据
-    this.formdata = user;
+      this.formdata = user;
 
       this.dialogFormVisibleEdit = true;
     },
