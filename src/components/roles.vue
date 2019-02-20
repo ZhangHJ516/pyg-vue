@@ -73,18 +73,18 @@
         :default-expanded-keys="arrExpand" 
       -->
       <el-tree
+        ref="treeDom"
         :data="treelist"
         show-checkbox
         node-key="id"
-         default-expand-all
-      
+        default-expand-all
         :default-checked-keys="arrCheck"
         :props="defaultProps"
       ></el-tree>
 
       <div slot="footer" class="dialog-footer">
         <el-button @click="dialogFormVisible = false">取 消</el-button>
-        <el-button type="primary" @click="dialogFormVisible = false">确 定</el-button>
+        <el-button type="primary" @click="setRights()">确 定</el-button>
       </div>
     </el-dialog>
   </el-card>
@@ -99,17 +99,46 @@ export default {
       //树形结构数据
       treelist: [],
       arrCheck: [],
-     // arrExpand: [],
+      // arrExpand: [],
       defaultProps: {
         label: "authName",
         children: "children"
-      }
+      },
+      currRoleId: -1
     };
   },
   created() {
     this.getRoles();
   },
   methods: {
+    //分配权限 - 发送请求
+    async setRights() {
+      // 获取全选节点id -> getHalfCheckedKeys
+      const arr1 = this.$refs.treeDom.getCheckedKeys();
+      // console.log(arr1);
+
+      // 获取半选节点id -> getHalfCheckedKeys
+      const arr2 = this.$refs.treeDom.getHalfCheckedKeys();
+      // console.log(arr2);
+
+      //展开操作运算符   ...后可以是数组也可以是对象
+      //作用是把...后边的元素一个个展开,放在外面的数组里
+      const arr = [...arr1, ...arr2];
+      //roleID角色id
+      const res = await this.$http.post(`roles/${this.currRoleId}/rights`, {
+        rids: arr.join(",")
+      });
+      console.log(res);
+      const {
+        meta: { msg, status },
+        data
+      } = res.data;
+      if (status === 200) {
+        this.dialogFormVisible = false;
+         this.getRoles();
+      }
+    },
+
     // 取消权限
     async deleRights(role, rights) {
       console.log(role, rights); //打印出被删除的角色
@@ -135,6 +164,7 @@ export default {
     },
     //分配权限 - 打开对话框
     async showDiaSetRights(role) {
+      this.currRoleId = role.id;
       //发送请求 获取树形结构数据
       const res = await this.$http.get(`rights/tree`);
       console.log(res);
@@ -157,22 +187,22 @@ export default {
         //     });
         //   });
         // });
-       // console.log(temp);
-       // this.arrExpand = temp;
+        // console.log(temp);
+        // this.arrExpand = temp;
 
         //获取当前角色的权限id
-       // console.log(role);
+        // console.log(role);
         const temp2 = [];
         role.children.forEach(item1 => {
-         // temp2.push(item1.id);
+          // temp2.push(item1.id);
           item1.children.forEach(item2 => {
-           // temp2.push(item2.id);
+            // temp2.push(item2.id);
             item2.children.forEach(item3 => {
               temp2.push(item3.id);
             });
           });
         });
-         this.arrCheck = temp2;
+        this.arrCheck = temp2;
       }
 
       this.dialogFormVisible = true;
