@@ -233,6 +233,7 @@ export default {
         if (this.selectedOptions.length !== 3) {
           // 提示
           this.$message.error("请先选择三级分类!");
+         // this.arrDy = [];
           //
           if (this.active === "2") {
             this.arrDy = [];

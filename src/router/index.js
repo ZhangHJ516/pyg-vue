@@ -11,6 +11,8 @@ import Rights from '@/components/rights.vue'
 import Roles from '@/components/roles.vue'
 import Goodslist from '@/components/goodslist.vue'
 import Goodsadd from '@/components/goodsadd.vue'
+import Cateparams from '@/components/cateparams.vue'
+import Goodscate from '@/components/goodscate.vue'
 Vue.use(Router)
 //实例化路由
 const router = new Router({
@@ -44,6 +46,16 @@ const router = new Router({
         path: '/goodsadd',
         component:Goodsadd
       },
+      {
+        name: 'params',
+        path: '/params',
+        component:Cateparams
+      },
+      {
+        name: 'categories',
+        path: '/categories',
+        component:Goodscate
+      }
       ]
     }, {
       name: 'login',
